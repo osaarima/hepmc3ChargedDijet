@@ -1,0 +1,13 @@
+#!/bin/csh -f
+cd /n/work00/osanmasa/hepmc3ChargedDijet
+source setup.csh
+setenv what  hepmc3ChargedDijet
+set line = 0
+@ line = ( $SLURM_ARRAY_TASK_ID )
+setenv fullFile `head -${line} Todo_testDJ-20.txt | tail -1`
+setenv indir `dirname $fullFile`
+setenv myfile `basename $fullFile`
+setenv rootoutfile  /n/work00/osanmasa/hepmc3ChargedDijet/outputs/hepmc3-testDJ-20/data/hepmc3-testDJ-20-$myfile.root
+setenv Log      /n/work00/osanmasa/hepmc3ChargedDijet/outputs/hepmc3-testDJ-20/logs/hepmc3-testDJ-20-$myfile.log
+./${what} $fullFile $rootoutfile ../HepPDT/HepPDT-3.04.01/data/particle.tbl 20 >& $Log
+cd /n/work00/osanmasa/hepmc3ChargedDijet
