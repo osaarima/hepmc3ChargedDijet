@@ -4,24 +4,12 @@
 #include "TFile.h"
 #include "TLorentzVector.h"
 #include <TStopwatch.h>
-//#include <HepMC/IO_GenEvent.h>
-//#include <HepMC/GenEvent.h>
 
-//#include "HepMC/GenEvent.h"
-//#include "HepMC/ReaderAscii.h"
-//#include "HepMC/Print.h"
-//#include "HepMC/GenCrossSection.h"
-
-#include "HepMC3/GenEvent.h"
-#include "HepMC3/ReaderAscii.h"
-#include "HepMC3/GenParticle_fwd.h"
-#include "HepMC3/Print.h"
-#include "HepMC3/GenCrossSection.h"
-
-//#include <HepPDT/defs.h>
-//#include <HepPDT/TableBuilder.hh>
-//#include <HepPDT/TempParticleData.hh>
-//#include <HepPDT/ParticleDataTable.hh>
+//#include "HepMC3/GenEvent.h"
+//#include "HepMC3/ReaderAscii.h"
+//#include "HepMC3/GenParticle_fwd.h"
+//#include "HepMC3/Print.h"
+//#include "HepMC3/GenCrossSection.h"
 
 #include "fastjet/config.h"
 #include "fastjet/PseudoJet.hh"
@@ -29,22 +17,6 @@
 #include "fastjet/ClusterSequenceArea.hh"
 #include "fastjet/AreaDefinition.hh"
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
-/*
-#include "fastjet/config.h"
-#include "fastjet/ClusterSequence.hh"
-#include "fastjet/PseudoJet.hh"
-#include "fastjet/JetDefinition.hh"
-#include "fastjet/ClusterSequence.hh"
-#include "fastjet/ClusterSequenceArea.hh"
-#include "fastjet/AreaDefinition.hh"
-#include <fastjet/SISConePlugin.hh>
-#include <fastjet/CDFMidPointPlugin.hh>
-#ifdef FASTJET_VERSION
-#include <fastjet/Selector.hh>
-#include <fastjet/FunctionOfPseudoJet.hh>
-#include <fastjet/tools/BackgroundEstimatorBase.hh>
-#include <fastjet/tools/Subtractor.hh>
-*/
 #include <iostream>
 
 #include <TClonesArray.h>
@@ -53,6 +25,7 @@
 #include "src/JTreeDataManager.h"
 #include "src/AliJCard.h"
 #include "src/iaaAnalysis/AliJIaaAna.h"
+#include "src/JHepMC3DataManager.h"
 //#include "src/JHistos.h"
 //#include "src/AliJCard.h"
 
@@ -86,47 +59,22 @@ AliJCDijetHistos *fhistos;
 int main(int argc, char **argv) {
 
 	if(argc<5){
-		cout<<"usage: " << argv[0] << " <input.hepmc> <output.root> <particle.tbl> dijetLeadingPt"<<endl;exit(1);
+		cout<<"usage: " << argv[0] << " <input.hepmc> <output.root> dijetLeadingPt"<<endl;exit(1);
 	}
 	TStopwatch timer; 
 	timer.Start();   
 
-	char* hepmcFilename  = argv[1];
+	//char* hepmcFilename  = argv[1];
+	TString hepmcFilename  = argv[1];
 	TString outputs = argv[2];
-	TString sParticle = argv[3];
-    double dijetLeadingPt = atof(argv[4]);
+    double dijetLeadingPt = atof(argv[3]);
 
 	TFile *fout = new TFile(outputs.Data(),"RECREATE");
 	fout->cd();//opening of the output file
     TDirectoryFile *fdir = new TDirectoryFile( "JCDijetBaseTask","JCDijetBaseTask" );
     fdir->cd();
 
-	//HepMC::IO_GenEvent ascii_in(hepmcFilename,std::ios::in);
-    //Old:
-    //ReaderAscii text_input (hepmcFilename);
-    //New:
-    HepMC3::ReaderAscii text_input(hepmcFilename);
-    //HepMC3::ReaderAscii reader(hepmcFile.c_str());
-
-    /* // The HepPDT initialization. Trying out without it.
-    // Initialize HepPDF so that particle ID's can be used to determine charge and hadrons
-    std::ifstream pdfile( sParticle.Data() );
-    if( !pdfile ) { 
-      std::cerr << "cannot open " << sParticle.Data() << std::endl;
-      exit(-1);
-    }
-    HepPDT::ParticleDataTable datacol( "Generic Particle Table" );
-    {
-        // Construct table builder
-        HepPDT::TableBuilder  tb(datacol);
-        // bool  addParticleTable( std::istream&, TableBuilder&,
-        //                         bool validate = false );
-        // where:  validate=true => verify that the ParticleID is valid
-        if( !addParticleTable( pdfile, tb, true ) ) { 
-            std::cout << "error reading PDG pdt file " << std::endl; 
-        }
-    } // the tb destructor fills datacol
-    */
+    JHepMC3DataManager* mana = new JHepMC3DataManager(hepmcFilename);
 
     //-------------------------------------------------------
     // Histograms and tools
@@ -295,87 +243,9 @@ int main(int argc, char **argv) {
     //HepMC::GenEvent* evt = ascii_in.read_next_event();
 
     //int iEvent=0;
-    if(EventCounter%1000==0) cout << "evt: " << EventCounter << endl;
-    while ( !text_input.failed() ) {
-        HepMC3::GenEvent evt(HepMC3::Units::GEV,HepMC3::Units::MM);
-        text_input.read_event(evt);
-        if( text_input.failed() ) break;
-        const std::vector<HepMC3::ConstGenParticlePtr> hadrons = GetHadrons(evt);
-        if( EventCounter == 0 ) {
-            cout << " First event: " << endl;
-            HepMC3::Print::listing(evt);
-            HepMC3::Print::content(evt);
-
-            cout << " Testing attribute reading for the first event: " << endl;
-
-            shared_ptr<GenCrossSection> cs = evt.attribute<GenCrossSection>("GenCrossSection");
-            shared_ptr<GenHeavyIon>     hi = evt.attribute<GenHeavyIon>("GenHeavyIon");
-            shared_ptr<GenPdfInfo>      pi = evt.attribute<GenPdfInfo>("GenPdfInfo");
-
-            if(cs) {
-                cout << " Has GenCrossSection:   ";
-                HepMC3::Print::line(cs);
-            }
-            else cout << " No GenCrossSection " << endl;
-
-            if(pi) {
-                cout << " Has GenPdfInfo:        ";
-                HepMC3::Print::line(pi);
-            }
-            else cout << " No GenPdfInfo " << endl;
-
-            if(hi) {
-                cout << " Has GenHeavyIon:       ";
-                HepMC3::Print::line(hi);
-            }
-            else cout << " No GenHeavyIon " << endl;
-        }
-        //iEvent++;
-        inputList->Clear("C");
-        ebeweight = 1.0; //no event-by-event weight at all. //sigmaGen/nTrial;
-        hCrossSectionInfo->Fill(7.5,ebeweight);
-        //if(iEvent % ieout == 0) cout << iEvent << "\t" << int(float(iEvent)/nEvent*100) << "%, nTried:" << nTried << ", nTrial:" << nTrial << ", sigma:" << sigmaGen << endl;
-        
-        // http://hepmc.web.cern.ch/hepmc/classHepMC3_1_1GenCrossSection.html
-        // Is not implemented in 3.0.0
-        //shared_ptr<GenCrossSection> cs = evt.attribute<GenCrossSection>("GenCrossSection");
-        //cs->set_cross_section(-1.0,0.0);
-        //double xSec = cs->xsec("cross_section");
-        //double xSec = cs->xsec (0);
-        //crossSec += xSec*1e-9; // From pb to mb
-        //cout << "cross section: " << xSec*1e-9 << endl;
-
-        int iParticles = 0;
-        //for ( HepMC::GenEvent::particle_const_iterator p = evt.particles_begin(); p != evt.particles_end(); ++p ){
-        //FOREACH ( GenParticlePtr &p, evt.particles() ) { // For this method, no need for (* ) around p.
-        //for (auto p: evt.particles()) { // This method is recommended by hepmc: http://hepmc.web.cern.ch/hepmc/differences.html
-        for (auto p : hadrons) {
-            //cout << iParticles << " in_event: " << p->in_event() << endl;
-            //Print::line(p);
-            //
-            //Need to skip all with status == 0 ?
-            //if(p->pid()==0) continue;
-            //cout << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl; //", charge: " << datacol.particle(HepPDT::ParticleID(p->pid()))->charge() << ", isHadron: " << datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron() << endl;
-            //if(p->status()>1 && p->pid()!=0 && !datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron()) cout << "A non-hadron: " << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl;
-            //if(p->status()>1 && p->status()<81 && p->status()!=62) cout << "Special status: " << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl;
-            //if (    p->status() > 79 && true){                                              // Check if particle is final
-                    //datacol.particle(HepPDT::ParticleID(p->pid()))->charge() != 0 && // Only charged particles are used.
-                    //datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron() ) {   // Only hadrons are used.
-            TLorentzVector lParticle(p->momentum().px(), p->momentum().py(), p->momentum().pz(), p->momentum().e());
-            //cout << "Particle: " << p->momentum().px() << ", " <<  p->momentum().py() << ", " << p->momentum().pz() << ", " << p->momentum().e() << endl;
-            AliJBaseTrack track( lParticle );
-            pt = track.Pt();
-            eta = track.Eta();
-            if (pt>partMinPtCut && TMath::Abs(eta) < partMinEtaCut){
-                track.SetID(p->pid());
-                track.SetTrackEff(1.);
-                new ((*inputList)[inputList->GetEntriesFast()]) AliJBaseTrack(track);
-            }
-            iParticles++;
-            //}
-        } // end of finalparticles
-
-        // Here I call my function
+    //cout << "evt: " << EventCounter << ", " << endl;
+    while ( !mana->getList(inputList) ) {
+                // Here I call my function
         CalculateJetsDijets(inputList,
                             5, // Debug
                             centBin, // Cent bin
@@ -401,9 +271,6 @@ int main(int argc, char **argv) {
         fAna->UserExec();
         */
 
-
-        //delete evt;
-        //ascii_in >> evt;
         EventCounter++;
         //if(EventCounter == 1) break;
         //if(iEvent == nEvent-1) cout << nEvent << "\t" << "100%, nTried:" << pythia.info.nTried() << ", sigma:" << pythia.info.sigmaGen() << endl ;
@@ -705,34 +572,3 @@ void CalculateJetsDijets(TClonesArray *inList,
 }
 
 
-// From JETSCAPE-analysis c++ branch:
-// Courtesy of James Mulligan
-//-----------------------------------------------------------------
-// Get list of hadrons.
-// Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
-std::vector<HepMC3::ConstGenParticlePtr> GetHadrons(const HepMC3::GenEvent &event) {
-  
-  std::vector<HepMC3::ConstGenParticlePtr> final_state_particles;
-  for (auto vertex : event.vertices()) {
-    
-    double vertexTime = vertex->position().t();
-    if ( abs(vertexTime - 100) < 1e-3 ) {
-      final_state_particles = vertex->particles_out();
-    }
-    
-  }
-  
-  // Remove neutrinos
-  std::vector<HepMC3::ConstGenParticlePtr> hadrons;
-  for (auto particle : final_state_particles) {
-    
-    int pid = particle->pid();
-    if (pid!=12 && pid!=14 && pid!=16) {
-      hadrons.push_back(particle);
-    }
-    
-  }
-  
-  return hadrons;
-  
-}

@@ -46,7 +46,9 @@ HDRSDICT = src/AliJCDijetHistos.h \
 		   src/AliJEventPool.h \
 		   src/AliJEfficiency.h \
 		   src/AliJRunTable.h \
-		   src/AliJTrack.h 
+		   src/AliJTrack.h \
+		   src/JHepMC3DataManager.h \
+		   ../../alidock/alice/HepMCMy/hepmc3-install/include/HepMC3/GenEvent.h
 
 HDRS	+= $(HDRSDICT)  nanoDict.h
 
@@ -80,4 +82,4 @@ cl:  clean $(PROGRAM)
 nanoDict.cc: $(HDRSDICT)
 		@echo "Generating dictionary ..."
 		@rm -f nanoDict.cc nanoDict.hh nanoDict.h
-		@rootcint nanoDict.cc -c -D$(version) $(HDRSDICT)
+		@rootcint nanoDict.cc -D$(version) $(HDRSDICT)
