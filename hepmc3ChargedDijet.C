@@ -7,15 +7,21 @@
 //#include <HepMC/IO_GenEvent.h>
 //#include <HepMC/GenEvent.h>
 
-#include "HepMC/GenEvent.h"
-#include "HepMC/ReaderAscii.h"
-#include "HepMC/Print.h"
-#include "HepMC/GenCrossSection.h"
+//#include "HepMC/GenEvent.h"
+//#include "HepMC/ReaderAscii.h"
+//#include "HepMC/Print.h"
+//#include "HepMC/GenCrossSection.h"
 
-#include <HepPDT/defs.h>
-#include <HepPDT/TableBuilder.hh>
-#include <HepPDT/TempParticleData.hh>
-#include <HepPDT/ParticleDataTable.hh>
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/ReaderAscii.h"
+#include "HepMC3/GenParticle_fwd.h"
+#include "HepMC3/Print.h"
+#include "HepMC3/GenCrossSection.h"
+
+//#include <HepPDT/defs.h>
+//#include <HepPDT/TableBuilder.hh>
+//#include <HepPDT/TempParticleData.hh>
+//#include <HepPDT/ParticleDataTable.hh>
 
 #include "fastjet/config.h"
 #include "fastjet/PseudoJet.hh"
@@ -52,7 +58,7 @@
 
 #define DEBUG 0
 
-using namespace HepMC;
+using namespace HepMC3;
 using namespace fastjet;
 using namespace std;
 void CalculateJetsDijets(TClonesArray *inList,
@@ -69,6 +75,7 @@ void CalculateJetsDijets(TClonesArray *inList,
                          double lLeadingJetCut,
                          double lSubleadingJetCut,
                          double lDeltaPhiCut);
+std::vector<HepMC3::ConstGenParticlePtr> GetHadrons(const HepMC3::GenEvent &event);
 
 
 class AliJCDijetHistos;
@@ -95,8 +102,13 @@ int main(int argc, char **argv) {
     fdir->cd();
 
 	//HepMC::IO_GenEvent ascii_in(hepmcFilename,std::ios::in);
-    ReaderAscii text_input (hepmcFilename);
+    //Old:
+    //ReaderAscii text_input (hepmcFilename);
+    //New:
+    HepMC3::ReaderAscii text_input(hepmcFilename);
+    //HepMC3::ReaderAscii reader(hepmcFile.c_str());
 
+    /* // The HepPDT initialization. Trying out without it.
     // Initialize HepPDF so that particle ID's can be used to determine charge and hadrons
     std::ifstream pdfile( sParticle.Data() );
     if( !pdfile ) { 
@@ -114,6 +126,7 @@ int main(int argc, char **argv) {
             std::cout << "error reading PDG pdt file " << std::endl; 
         }
     } // the tb destructor fills datacol
+    */
 
     //-------------------------------------------------------
     // Histograms and tools
@@ -127,6 +140,7 @@ int main(int argc, char **argv) {
 
     TH1D *hCrossSectionInfo = new TH1D("hCrossSection","CrossSectionInfo",8,0,8);
 
+    /*
     // ======================== JIaa Ana =========================
 
     //TString cardName  = Form("%s%s",gSystem->Getenv("ALICE_PHYSICS"),"/PWGCF/Correlations/macros/jcorran/cardAlice_IAA_pp.input");
@@ -152,6 +166,7 @@ int main(int argc, char **argv) {
     fAna->SetAssoc( jassoc.Data() );
 
     fAna->UserCreateOutputObjects();
+    */
 
 
     //------------------------------------------------------------------
@@ -280,14 +295,16 @@ int main(int argc, char **argv) {
     //HepMC::GenEvent* evt = ascii_in.read_next_event();
 
     //int iEvent=0;
+    if(EventCounter%1000==0) cout << "evt: " << EventCounter << endl;
     while ( !text_input.failed() ) {
-        GenEvent evt(Units::GEV,Units::MM);
+        HepMC3::GenEvent evt(HepMC3::Units::GEV,HepMC3::Units::MM);
         text_input.read_event(evt);
         if( text_input.failed() ) break;
+        const std::vector<HepMC3::ConstGenParticlePtr> hadrons = GetHadrons(evt);
         if( EventCounter == 0 ) {
             cout << " First event: " << endl;
-            Print::listing(evt);
-            Print::content(evt);
+            HepMC3::Print::listing(evt);
+            HepMC3::Print::content(evt);
 
             cout << " Testing attribute reading for the first event: " << endl;
 
@@ -297,19 +314,19 @@ int main(int argc, char **argv) {
 
             if(cs) {
                 cout << " Has GenCrossSection:   ";
-                Print::line(cs);
+                HepMC3::Print::line(cs);
             }
             else cout << " No GenCrossSection " << endl;
 
             if(pi) {
                 cout << " Has GenPdfInfo:        ";
-                Print::line(pi);
+                HepMC3::Print::line(pi);
             }
             else cout << " No GenPdfInfo " << endl;
 
             if(hi) {
                 cout << " Has GenHeavyIon:       ";
-                Print::line(hi);
+                HepMC3::Print::line(hi);
             }
             else cout << " No GenHeavyIon " << endl;
         }
@@ -331,7 +348,8 @@ int main(int argc, char **argv) {
         int iParticles = 0;
         //for ( HepMC::GenEvent::particle_const_iterator p = evt.particles_begin(); p != evt.particles_end(); ++p ){
         //FOREACH ( GenParticlePtr &p, evt.particles() ) { // For this method, no need for (* ) around p.
-        for (auto p: evt.particles()) { // This method is recommended by hepmc: http://hepmc.web.cern.ch/hepmc/differences.html
+        //for (auto p: evt.particles()) { // This method is recommended by hepmc: http://hepmc.web.cern.ch/hepmc/differences.html
+        for (auto p : hadrons) {
             //cout << iParticles << " in_event: " << p->in_event() << endl;
             //Print::line(p);
             //
@@ -340,21 +358,21 @@ int main(int argc, char **argv) {
             //cout << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl; //", charge: " << datacol.particle(HepPDT::ParticleID(p->pid()))->charge() << ", isHadron: " << datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron() << endl;
             //if(p->status()>1 && p->pid()!=0 && !datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron()) cout << "A non-hadron: " << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl;
             //if(p->status()>1 && p->status()<81 && p->status()!=62) cout << "Special status: " << iParticles << " status: " << p->status() << ", pid: " << p->pid() << endl;
-            if (    p->status() > 79 &&                                               // Check if particle is final
-                    datacol.particle(HepPDT::ParticleID(p->pid()))->charge() != 0 && // Only charged particles are used.
-                    datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron() ) {   // Only hadrons are used.
-                TLorentzVector lParticle(p->momentum().px(), p->momentum().py(), p->momentum().pz(), p->momentum().e());
-                //cout << "Particle: " << p->momentum().px() << ", " <<  p->momentum().py() << ", " << p->momentum().pz() << ", " << p->momentum().e() << endl;
-                AliJBaseTrack track( lParticle );
-                pt = track.Pt();
-                eta = track.Eta();
-                if (pt>partMinPtCut && TMath::Abs(eta) < partMinEtaCut){
-                    track.SetID(p->pid());
-                    track.SetTrackEff(1.);
-                    new ((*inputList)[inputList->GetEntriesFast()]) AliJBaseTrack(track);
-                }
-                iParticles++;
+            //if (    p->status() > 79 && true){                                              // Check if particle is final
+                    //datacol.particle(HepPDT::ParticleID(p->pid()))->charge() != 0 && // Only charged particles are used.
+                    //datacol.particle(HepPDT::ParticleID(p->pid()))->isHadron() ) {   // Only hadrons are used.
+            TLorentzVector lParticle(p->momentum().px(), p->momentum().py(), p->momentum().pz(), p->momentum().e());
+            //cout << "Particle: " << p->momentum().px() << ", " <<  p->momentum().py() << ", " << p->momentum().pz() << ", " << p->momentum().e() << endl;
+            AliJBaseTrack track( lParticle );
+            pt = track.Pt();
+            eta = track.Eta();
+            if (pt>partMinPtCut && TMath::Abs(eta) < partMinEtaCut){
+                track.SetID(p->pid());
+                track.SetTrackEff(1.);
+                new ((*inputList)[inputList->GetEntriesFast()]) AliJBaseTrack(track);
             }
+            iParticles++;
+            //}
         } // end of finalparticles
 
         // Here I call my function
@@ -374,12 +392,14 @@ int main(int argc, char **argv) {
                             dijetDeltaPhiCut);  // Dijet DeltaPhi cut is pi/(this-argument)
 
         // Next Iaa analysis
+        /*
         fAna->SetTrackList(inputList);
         //fAna->GetCard()->WriteCard(fOutput); // fOutput is what exactly?
         fAna->SetRunNumber(EventCounter);
         fAna->SetCentrality(5);
         fAna->SetZVertex(0.0); // same
         fAna->UserExec();
+        */
 
 
         //delete evt;
@@ -682,4 +702,37 @@ void CalculateJetsDijets(TClonesArray *inList,
             }
         }
     }
+}
+
+
+// From JETSCAPE-analysis c++ branch:
+// Courtesy of James Mulligan
+//-----------------------------------------------------------------
+// Get list of hadrons.
+// Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
+std::vector<HepMC3::ConstGenParticlePtr> GetHadrons(const HepMC3::GenEvent &event) {
+  
+  std::vector<HepMC3::ConstGenParticlePtr> final_state_particles;
+  for (auto vertex : event.vertices()) {
+    
+    double vertexTime = vertex->position().t();
+    if ( abs(vertexTime - 100) < 1e-3 ) {
+      final_state_particles = vertex->particles_out();
+    }
+    
+  }
+  
+  // Remove neutrinos
+  std::vector<HepMC3::ConstGenParticlePtr> hadrons;
+  for (auto particle : final_state_particles) {
+    
+    int pid = particle->pid();
+    if (pid!=12 && pid!=14 && pid!=16) {
+      hadrons.push_back(particle);
+    }
+    
+  }
+  
+  return hadrons;
+  
 }
