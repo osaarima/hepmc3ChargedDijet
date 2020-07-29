@@ -47,8 +47,7 @@ HDRSDICT = src/AliJCDijetHistos.h \
 		   src/AliJEfficiency.h \
 		   src/AliJRunTable.h \
 		   src/AliJTrack.h \
-		   src/JHepMC3DataManager.h \
-		   ../../alidock/alice/HepMCMy/hepmc3-install/include/HepMC3/GenEvent.h
+		   src/JHepMC3DataManager.h
 
 HDRS	+= $(HDRSDICT)  nanoDict.h
 
