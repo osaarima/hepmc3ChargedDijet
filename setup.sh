@@ -5,8 +5,8 @@
 #export FASTJET=$HOME/alice/fastjet/3.1.3/inst  from AliROOT
 #export PYTHIA8=$HOME/alice/PythiaMy/pythia8226
 
-export HEPMC=$HOME/alice/HepMCMy/hepmc3-install
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/alidock/alice/HepMCMy/hepmc3-install/lib64
+export HEPMC=$HOME/alice/HepMCMy/hepmc-22-08-23/hepmc3-install
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/alidock/alice/HepMCMy/hepmc3-install/lib64
 #export HEPPDT=$HOME/alice/HepPDTMy/HepPDT-3.04.01-install
 
 # In puck:

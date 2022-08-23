@@ -49,10 +49,11 @@
 
 #include <TClonesArray.h>
 #include "src/AliJCDijetHistos.h"
+#include "src/AliJCDijetAna.h"
 #include "src/AliJBaseTrack.h"
-#include "src/JTreeDataManager.h"
-#include "src/AliJCard.h"
-#include "src/iaaAnalysis/AliJIaaAna.h"
+//#include "src/JTreeDataManager.h"
+//#include "src/AliJCard.h"
+//#include "src/iaaAnalysis/AliJIaaAna.h"
 //#include "src/JHistos.h"
 //#include "src/AliJCard.h"
 
@@ -140,6 +141,8 @@ int main(int argc, char **argv) {
 
     TH1D *hCrossSectionInfo = new TH1D("hCrossSection","CrossSectionInfo",8,0,8);
 
+    AliJCDijetAna* fana = new AliJCDijetAna();
+
     /*
     // ======================== JIaa Ana =========================
 
@@ -175,7 +178,7 @@ int main(int argc, char **argv) {
     TClonesArray *inputList = new TClonesArray("AliJBaseTrack",1500);
 
     double partMinPtCut         = 0.15;// atlas 0.5 cms/alice 0.15
-    double partMinEtaCut        = 0.8;
+    double partMinEtaCut        = 0.9;
     double coneR                = 0.4; // atlas 0.6, cms 0.7 alice 0.4
 	double ktconeR              = 0.4;
 	double fusePionMassInktjets = false;
@@ -244,6 +247,7 @@ int main(int argc, char **argv) {
     fhistos->fh_info->Fill("Delta phi cut pi/",dijetDeltaPhiCut);
 
     // Initialize fh_events so that the bin order is correct
+     /*
     fhistos->fh_events[0]->Fill("events",0.0);
     fhistos->fh_events[0]->Fill("particles",0.0);
     fhistos->fh_events[0]->Fill("acc. particles",0.0);
@@ -278,6 +282,29 @@ int main(int argc, char **argv) {
     fhistos->fh_events[0]->Fill("kt dijets leading cut",0.0);
     fhistos->fh_events[0]->Fill("kt acc. dijets",0.0);
     fhistos->fh_events[0]->Fill("kt deltaphi cut dijets",0.0);
+
+    */
+
+    fana->SetSettings(5,
+                      partMinEtaCut,
+                      partMinPtCut,
+                      DBL_MAX, //particle pt cut max
+                      coneR,
+                      ktconeR,
+                      fktScheme,
+                      fktScheme, //antikt
+                      fusePionMassInktjets,
+                      fuseDeltaPhiBGSubtr,
+                      jetConstituentCut,
+                      dijetLeadingPt,
+                      dijetSubleadingPt,
+                      0, //jet min pt cut
+                      dijetDeltaPhiCut,
+                      0.3, //Matching
+                      0.0,
+                      true,
+                      true);
+    fana->InitHistos(fhistos, true, 2);
 
 
     //--------------------------------------------------------
@@ -376,6 +403,9 @@ int main(int argc, char **argv) {
         } // end of finalparticles
 
         // Here I call my function
+        fana->CalculateJets(inputList, fhistos, 0, ebeweight);
+        fana->FillJetsDijets(fhistos, 0, ebeweight);
+        /*
         CalculateJetsDijets(inputList,
                             5, // Debug
                             centBin, // Cent bin
@@ -390,6 +420,7 @@ int main(int argc, char **argv) {
                             dijetLeadingPt, // Dijet leading jet pt cut
                             dijetSubleadingPt, // Dijet subleading jet pt cut
                             dijetDeltaPhiCut);  // Dijet DeltaPhi cut is pi/(this-argument)
+        */
 
         // Next Iaa analysis
         /*

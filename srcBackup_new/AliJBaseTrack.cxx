@@ -28,7 +28,6 @@
 ////////////////////////////////////////////////////
 
 #include "AliJBaseTrack.h"
-#include <TString.h>
 
 //______________________________________________________________________________
 AliJBaseTrack::AliJBaseTrack():
@@ -40,7 +39,7 @@ AliJBaseTrack::AliJBaseTrack():
     fFlags(0),
     fTriggID(-1),
     fAssocID(-1),
-    fTracEff(1.0),
+    fTracEff(-1),
     fMCIndex(-9999),
     fWeight(1.0)
 {
@@ -58,7 +57,7 @@ AliJBaseTrack::AliJBaseTrack(float px,float py, float pz, float e, Int_t id, Sho
     fFlags(0),
     fTriggID(-1),
     fAssocID(-1),
-    fTracEff(1.0),
+    fTracEff(-1),
     fMCIndex(-9999),
     fWeight(1.0)
 {
@@ -136,7 +135,6 @@ void AliJBaseTrack::Print(Option_t *option) const{
   cout<<"fTriggID="<<fTriggID <<endl; 
   cout<<"fAssocID="<<fAssocID <<endl; 
   cout<<"fTracEff="<<fTracEff <<endl; 
-  cout<<"fWeight="<<fWeight <<endl;
 }
 
 ClassImp(AliJBaseTrack)
