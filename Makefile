@@ -24,12 +24,10 @@ LDFLAGS += -L$(HEPMC)/lib -lHepMC3
 LDFLAGS += -Wl,-rpath -Wl,$(HEPMC)/lib
 INCS    += -I$(HEPMC)/include
 
-#LDFLAGS += -L$(HEPMC)/lib -lHepMC 
-#LDFLAGS += -Wl,-rpath -Wl,$(HEPMC)/lib
-#LDFLAGS += -L$(HEPPDT)/lib -lHepPDT -lHepPID
-#LDFLAGS += -Wl,-rpath -Wl,$(HEPPDT)/lib
-#INCS    += -I$(HEPMC)/include
-#INCS    += -I$(HEPPDT)/include
+LDFLAGS += -L$(HEPPDT)/lib -lHepPDT -lHepPID
+LDFLAGS += -Wl,-rpath -Wl,$(HEPPDT)/lib
+INCS    += -I$(HEPPDT)/include
+
 LDFLAGS += -L/home/osaarima/alice/sw/ubuntu1804_x86-64/cgal/latest-aliroot6-user-next-root6/lib/ -lCGAL 
 LDFLAGS += -L/home/osaarima/alice/sw/ubuntu1804_x86-64/GMP/latest-aliroot6-user-next-root6/lib/ -lgmp
 CXXFLAGS  += $(INCS)
