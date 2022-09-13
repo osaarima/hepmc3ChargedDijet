@@ -122,10 +122,10 @@ int main(int argc, char **argv) {
     //
     fhistos = new AliJCDijetHistos();
     vector<double> centbins = {0.0, 100.0};
-    TString sDijetMBins = "0, 20, 40, 45, 55, 65, 75, 85, 100, 120, 150, 250, 400, 500, 100000";
     fhistos->SetCentralityBinsHistos(centbins);
-    fhistos->CreateEventTrackHistos();
+    TString sDijetMBins = "0, 20, 40, 45, 55, 65, 75, 85, 100, 120, 150, 250, 400, 500, 100000";
     fhistos->SetDijetMBinsHistos(sDijetMBins);
+    fhistos->CreateEventTrackHistos();
 
     fhistos->fHMG->Print();
 
