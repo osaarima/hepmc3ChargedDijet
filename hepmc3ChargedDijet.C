@@ -307,6 +307,7 @@ int main(int argc, char **argv) {
     //Float_t sigmaGen = 0.0;
     Float_t ebeweight = 1.0;
     double crossSec = 0.0;
+    double weightSum = 0.0;
     double pt, eta;
 
     //HepMC::GenEvent* evt = ascii_in.read_next_event();
@@ -354,13 +355,14 @@ int main(int argc, char **argv) {
         //if(iEvent % ieout == 0) cout << iEvent << "\t" << int(float(iEvent)/nEvent*100) << "%, nTried:" << nTried << ", nTrial:" << nTrial << ", sigma:" << sigmaGen << endl;
         
         // http://hepmc.web.cern.ch/hepmc/classHepMC3_1_1GenCrossSection.html
-        // Is not implemented in 3.0.0
-        //shared_ptr<GenCrossSection> cs = evt.attribute<GenCrossSection>("GenCrossSection");
-        //cs->set_cross_section(-1.0,0.0);
-        //double xSec = cs->xsec("cross_section");
-        //double xSec = cs->xsec (0);
-        //crossSec += xSec*1e-9; // From pb to mb
-        //cout << "cross section: " << xSec*1e-9 << endl;
+        shared_ptr<GenCrossSection> cs = evt.attribute<GenCrossSection>("GenCrossSection");
+        double xSec = cs->xsec(0);
+        crossSec = xSec*1e-9; // From pb to mb
+        int index = 0;
+        ebeweight = evt.weight(index);
+        weightSum += ebeweight;
+        //cout << "cross section: " << crossSec << endl;
+        //cout << "weight: " << ebeweight << endl;
 
         int iParticles = 0;
         //for ( HepMC::GenEvent::particle_const_iterator p = evt.particles_begin(); p != evt.particles_end(); ++p ){
@@ -415,9 +417,11 @@ int main(int argc, char **argv) {
 
     fhistos->fh_events[0]->Fill("events",EventCounter);
     cout << "Total cross sec: " << crossSec << ", total events: " << EventCounter << ", ratio: " << crossSec/EventCounter << endl;
-    hCrossSectionInfo->Fill(2.5,crossSec/EventCounter);
-    hCrossSectionInfo->Fill(3.5,crossSec/EventCounter);
+    hCrossSectionInfo->Fill(2.5,crossSec);
+    hCrossSectionInfo->Fill(3.5,EventCounter);
     hCrossSectionInfo->Fill(5.5,1); // for counting # of merged
+    hCrossSectionInfo->Fill(6.5,weightSum);
+
 
     /*
        nTried = pythia.info.nTried();
